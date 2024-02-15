@@ -3,10 +3,18 @@ package alfred
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 )
 
 type Workflow struct {
-	Items []Item `json:"items"`
+	Input  []string
+	output Output
+}
+
+type Output struct {
+	Rerun     float64           `json:"rerun,omitempty"`
+	Variables map[string]string `json:"variables,omitempty"`
+	Items     []Item            `json:"items"`
 }
 
 // Icon specifies the "icon" field of an Item.
@@ -47,10 +55,16 @@ type Item struct {
 	QuicklookURL string            `json:"quicklookurl,omitempty"`
 }
 
-func (wf *Workflow) AddItem(item Item) {
-	wf.Items = append(wf.Items, item)
+func InitWorkflow() *Workflow {
+	return &Workflow{
+		Input: os.Args[1:],
+	}
 }
-func (wf *Workflow) SendFeedBack() {
-	wfJSON, _ := json.Marshal(wf)
+
+func (wf *Workflow) AddItem(item Item) {
+	wf.output.Items = append(wf.output.Items, item)
+}
+func (wf *Workflow) SendOutput() {
+	wfJSON, _ := json.Marshal(wf.output)
 	fmt.Println(string(wfJSON))
 }
