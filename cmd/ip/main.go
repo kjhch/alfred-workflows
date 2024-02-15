@@ -56,13 +56,11 @@ func queryArgIp(wf *alfred.Workflow) {
 					Title:    ipInfo["IP"],
 					Subtitle: fmt.Sprintf("%v  %v  %v", ipInfo["地址"], ipInfo["数据二"], ipInfo["数据三"]),
 					Arg:      ipInfo["IP"],
-					Icon:     &alfred.Icon{Path: "icon.png"},
 				}
 			} else {
 				itemChan <- alfred.Item{
 					Title: ip,
 					Arg:   ip,
-					Icon:  &alfred.Icon{Path: "icon.png"},
 				}
 			}
 
@@ -105,7 +103,6 @@ func getLocalIp(result chan<- alfred.Item) {
 					Title:    "内网IP: " + ipnet.IP.String(),
 					Subtitle: iface.Name + "  " + iface.HardwareAddr.String(),
 					Arg:      ipnet.IP.String(),
-					Icon:     &alfred.Icon{Path: "icon.png"},
 				}
 				return
 			}
@@ -123,7 +120,6 @@ func getPublicIp(result chan<- alfred.Item) {
 		Title:    ipInfo["IP"],
 		Subtitle: fmt.Sprintf("%v  %v  %v", ipInfo["地址"], ipInfo["数据二"], ipInfo["数据三"]),
 		Arg:      ipInfo["IP"],
-		Icon:     &alfred.Icon{Path: "icon.png"},
 	}
 }
 
@@ -165,7 +161,6 @@ func getProxyIp(result chan<- alfred.Item) {
 			Title:    "代理IP: " + ip,
 			Subtitle: fmt.Sprintf("%v  %v  %v", ipInfo["地址"], ipInfo["数据二"], ipInfo["数据三"]),
 			Arg:      ip,
-			Icon:     &alfred.Icon{Path: "icon.png"},
 		}
 	}
 }
