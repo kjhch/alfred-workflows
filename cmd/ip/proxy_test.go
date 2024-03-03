@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"testing"
 )
 
@@ -36,4 +37,9 @@ func Test(t *testing.T) {
 	b, _ := io.ReadAll(resp.Body)
 	// 打印响应状态码
 	fmt.Println("响应:", string(b))
+}
+
+func TestRegReplace(t *testing.T) {
+	s := regexp.MustCompile(`[\s|/]+`).ReplaceAllString("上海市 | 电信", "|")
+	fmt.Println(s)
 }

@@ -47,8 +47,15 @@ func queryIp(wf *alfred.Workflow) {
 func queryArgIp(wf *alfred.Workflow) {
 	args := wf.Input
 	itemChan := make(chan alfred.Item)
+	ipv4Pattern := `^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
+	re := regexp.MustCompile(ipv4Pattern)
+	l := 0
 	for _, arg := range args {
-		ip := arg
+		ip := strings.TrimSpace(arg)
+		if !re.MatchString(ip) {
+			continue
+		}
+		l++
 		go func() {
 			ipInfo := getPublicIpInfo(ip)
 			if ipInfo != nil {
@@ -67,7 +74,7 @@ func queryArgIp(wf *alfred.Workflow) {
 		}()
 	}
 
-	for i := 0; i < len(args); i++ {
+	for i := 0; i < l; i++ {
 		item := <-itemChan
 		wf.AddItem(item)
 	}
@@ -117,7 +124,7 @@ func getPublicIp(result chan<- alfred.Item) {
 		return
 	}
 	result <- alfred.Item{
-		Title:    ipInfo["IP"],
+		Title:    "公网IP: " + ipInfo["IP"],
 		Subtitle: fmt.Sprintf("%v  %v  %v", ipInfo["地址"], ipInfo["数据二"], ipInfo["数据三"]),
 		Arg:      ipInfo["IP"],
 	}
@@ -172,7 +179,7 @@ func getPublicIpInfo(ip string) map[string]string {
 		return nil
 	}
 	req.Header.Set("User-Agent", "curl/7.88.1")
-	resp, err := (&http.Client{Timeout: 2 * time.Second}).Do(req)
+	resp, err := (&http.Client{Timeout: 5 * time.Second}).Do(req)
 	if err != nil {
 		println(err.Error())
 		return nil
@@ -184,6 +191,7 @@ func getPublicIpInfo(ip string) map[string]string {
 		return nil
 	}
 	bodys := string(body)
+	println(string(bodys))
 	lines := strings.Split(bodys, "\n")
 	ipInfo := make(map[string]string)
 	for _, line := range lines {
@@ -191,7 +199,9 @@ func getPublicIpInfo(ip string) map[string]string {
 			continue
 		}
 		kv := strings.Split(line, ":")
-		ipInfo[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		if len(kv) >= 2 {
+			ipInfo[strings.TrimSpace(kv[0])] = regexp.MustCompile(`[\s|/]+`).ReplaceAllString(strings.TrimSpace(kv[1]), "|")
+		}
 	}
 	return ipInfo
 }
