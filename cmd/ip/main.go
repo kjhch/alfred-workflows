@@ -28,7 +28,7 @@ func queryIp(wf *alfred.Workflow) {
 	localIpChan, publicIpChan, proxyIpChan := make(chan alfred.Item), make(chan alfred.Item), make(chan alfred.Item)
 	go getLocalIp(localIpChan)
 	go getPublicIp(publicIpChan)
-	go getProxyIp(proxyIpChan)
+	go getProxyIpV2(proxyIpChan)
 
 	localIp, localIpOK := <-localIpChan
 	publicIp, publicIpOK := <-publicIpChan
@@ -169,6 +169,39 @@ func getProxyIp(result chan<- alfred.Item) {
 			Subtitle: fmt.Sprintf("%v  %v  %v", ipInfo["地址"], ipInfo["数据二"], ipInfo["数据三"]),
 			Arg:      ip,
 		}
+	}
+}
+
+func getProxyIpV2(result chan<- alfred.Item) {
+	defer close(result)
+	req, err := http.NewRequest(http.MethodGet, "https://ipconfig.io", nil)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	req.Header.Set("User-Agent", "curl/7.88.1")
+	resp, err := (&http.Client{
+		Timeout: 3 * time.Second,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		}}).Do(req)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	bodys := string(body)
+	ip := strings.TrimSpace(bodys)
+	ipInfo := getPublicIpInfo(ip)
+	result <- alfred.Item{
+		Title:    "代理IP: " + ip,
+		Subtitle: fmt.Sprintf("%v  %v  %v", ipInfo["地址"], ipInfo["数据二"], ipInfo["数据三"]),
+		Arg:      ip,
 	}
 }
 
